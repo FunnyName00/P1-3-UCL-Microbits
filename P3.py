@@ -1,8 +1,9 @@
 # Imports go at the top
 from microbit import *
 import music
-
-
+import math
+# var pour identifier le rôle 
+role = "parent"
 
 def lait():
     qttlait = 0
@@ -27,6 +28,31 @@ def lait():
             
     return
             
+
+def afficher_role():
+    if role == "parent":
+        display.show(Image.HOUSE)
+    else:
+        display.show(Image.COW) #Image pour l'enfant (j'ai pas trouvé une image d'un bébé xD)
+
+
+def afficher_etat_eveil():
+    while True:
+        x = accelerometer.get_x()
+        y = accelerometer.get_y()
+        z = accelerometer.get_z()
+
+    # calcul de l'intesité de mouvement avec la norme euclidenne
+        mvt = Math.sqrt((x*x) + (y*y) + (z*z))
+
+        if mvt < 100: 
+            display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
+        elif 100 <= mvt < 600:
+            display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
+        else:
+            display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité 
+        
+
 
         
 
