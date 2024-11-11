@@ -43,11 +43,11 @@ def afficher_etat_eveil():
         z = accelerometer.get_z()
 
     # calcul de l'intesité de mouvement avec la norme euclidenne
-        mvt = Math.sqrt((x*x) + (y*y) + (z*z))
+        mvt = abs((x**2 + y**2 + z**2) ** 0.5 - 1024)
 
-        if mvt < 100: 
+        if mvt < 200: 
             display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
-        elif 100 <= mvt < 600:
+        elif 200 <= mvt < 600:
             display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
         else:
             display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité 
