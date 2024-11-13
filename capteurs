@@ -1,8 +1,8 @@
 
-from microbit import *
+from microbit import
 
 def climat():
-    display.scroll(temperature())
+    display.scroll( temperature() )
 
 def lumiere():
     display.scroll(display.read_light_level())  
