@@ -1,1 +1,27 @@
 
+from microbit import *
+
+def climat():
+    display.scroll(temperature())
+
+def lumiere():
+    display.scroll(display.read_light_level())  
+
+def mouvement():
+    if accelerometer.was_gesture('shake'):
+        display.show(Image.CONFUSED)
+    else:
+        display.show(Image.SAD)
+        
+def chute():
+        if accelerometer.was_gesture('freefall'):
+            display.show(Image.SURPRISED)
+
+def son():
+    while True:
+        if microphone.current_event() == SoundEvent.LOUD:
+            display.show(Image.HAPPY)
+        elif microphone.current_event() == SoundEvent.QUIET:
+            display.show(Image.ASLEEP)
+        display.scroll(microphone.sound_level())
+    
