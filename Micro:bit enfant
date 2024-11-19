@@ -1,0 +1,21 @@
+# Imports go at the top
+from microbit import *
+import radio
+
+# Code in a 'while True:' loop repeats forever
+while True:
+    radio.on()
+    radio.config(channel=67, address=0x472171164, group=17)
+    
+    x = accelerometer.get_x()
+    y = accelerometer.get_y()
+    z = accelerometer.get_z()
+    
+    mvt = str(abs((x**2 + y**2 + z**2) ** 0.5 - 1024))
+    
+    lenspeed = str(len(mvt))
+    print("1|"+lenspeed +"|" +mvt)
+    radio.send("1|"+lenspeed +"|" +mvt)
+    sleep(500)
+
+    
