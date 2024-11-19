@@ -1,5 +1,5 @@
-
-from microbit import
+# Imports go at the top
+from microbit import *
 
 def climat():
     display.scroll( temperature() )
