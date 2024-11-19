@@ -30,10 +30,57 @@ def chute():
             display.show(Image.SURPRISED)
 
 def son():
-    while True:
-        if microphone.current_event() == SoundEvent.LOUD:
-            display.show(Image.HAPPY)
-        elif microphone.current_event() == SoundEvent.QUIET:
-            display.show(Image.ASLEEP)
-        display.scroll(microphone.sound_level())
+    #faire correspondre n'importe quelle plage de nombres
+    def nombre(value, fromMin, fromMax, toMin, toMax):
+        fromRange = fromMax - fromMin
+        toRange = toMax - toMin
+        valueScaled = float(value - fromMin) / float(fromRange)
+        return toMin + (valueScaled * toRange)
+    # diagrames de niveaux sonores
+    graph5 = Image("99999:"
+                   "99999:"
+                   "99999:"
+                   "99999:"
+                   "99999")
     
+    graph4 = Image("44444:"
+                   "99999:"
+                   "99999:"
+                   "99999:"
+                   "99999")
+    
+    graph3 = Image("00000:"
+                   "55555:"
+                   "99999:"
+                   "99999:"
+                   "99999")
+    
+    graph2 = Image("00000:"
+                   "00000:"
+                   "55555:"
+                   "99999:"
+                   "99999")
+    
+    graph1 = Image("00000:"
+                   "00000:"
+                   "00000:"
+                   "55555:"
+                   "99999")
+                   
+    graph0 = Image("00000:"
+                   "00000:"
+                   "00000:"
+                   "00000:"
+                   "00000")
+    
+    allGraphs = [graph0, graph1, graph2, graph3, graph4, graph5]
+                   
+    # ignore first sound level reading
+    soundLevel = microphone.sound_level()
+    sleep(200)
+    
+    while True:
+        # choisir le bon graphique (1 à 5) grace aux niveaux sonores (0 à 255)
+        soundLevel = int(nombre(microphone.sound_level(), 0, 255, 0, 5))
+        display.show(allGraphs[soundLevel])
+        
