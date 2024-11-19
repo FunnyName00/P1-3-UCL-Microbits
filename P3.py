@@ -2,6 +2,10 @@
 from microbit import *
 import music
 import math
+import radio
+
+radio.on()
+radio.config(channel=67, address=0x472171164, group=17)
 # var pour identifier le rôle 
 role = "parent"
 
@@ -74,11 +78,12 @@ def jouer_la_musique():
 # Code in a 'while True:' loop repeats forever
 while True:
     fonction = 0
+    display.show(Image.BUTTERFLY)
     if button_a.was_pressed():
-        display.show(Image.ANGRY)
+        jouer_la_musique()
 
     if button_b.was_pressed():
-        display.show(Image.HEART)
+        afficher_etat_eveil()
 
     if pin_logo.is_touched():
         sleep(500)
