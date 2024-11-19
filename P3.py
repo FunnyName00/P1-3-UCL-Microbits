@@ -55,7 +55,7 @@ def afficher_etat_eveil():
 def jouer_la_musique():
     musiques = [music.BA_DING, music.PRELUDE, music.NYAN, music.BIRTHDAY]
     for musique in musiques:
-        music.play(music.musique)
+        music.play(musique)
         sleep(500)
 
         
