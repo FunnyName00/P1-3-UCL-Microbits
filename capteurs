@@ -2,10 +2,23 @@
 from microbit import *
 
 def climat():
-    display.show(temperature(), delay=8000, loop=True)
+    display.show(temperature(), delay=900, loop=True)
+    display.clear()
 
 def lumiere():
-    display.scroll(display.read_light_level())  
+    while True:
+        if display.read_light_level() > 100:
+            display.show(Image('60606:'
+                               '08980:'
+                               '69996:'
+                               '08980:'
+                               '60606'))
+        else:
+            display.show(Image('07886:'
+                               '79900:'
+                               '99000:'
+                               '79900:'
+                               '07886'))
 
 def mouvement():
     if accelerometer.was_gesture('shake'):
