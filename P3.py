@@ -52,7 +52,11 @@ def afficher_etat_eveil():
         else:
             display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité 
         
-
+def jouer_la_musique():
+    musiques = [music.BA_DING, music.PRELUDE, music.NYAN, music.BIRTHDAY]
+    for musique in musiques:
+        music.play(music.musique)
+        sleep(500)
 
         
 
