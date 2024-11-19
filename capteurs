@@ -3,7 +3,6 @@ from microbit import *
 
 def climat():
     display.show(temperature(), delay=900, loop=True)
-    display.clear()
 
 def lumiere():
     while True:
