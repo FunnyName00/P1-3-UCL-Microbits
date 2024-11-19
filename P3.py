@@ -8,7 +8,7 @@ role = "parent"
 def lait():
     qttlait = 0
     display.show(qttlait)
-    while not pin_logo.is_touched():
+    while True:
         
         if button_a.was_pressed() and button_b.was_pressed():
             qttlait =0
@@ -25,6 +25,10 @@ def lait():
             if qttlait >0:
                 qttlait-=1
             display.show(qttlait)
+
+        if pin_logo.is_touched():
+            sleep(500)
+            break
             
     return
             
@@ -35,23 +39,30 @@ def afficher_role():
     else:
         display.show(Image.COW) #Image pour l'enfant (j'ai pas trouvé une image d'un bébé xD)
 
+def capter_radio():
+    mes = str(radio.receive())  #message radio stocké dans un string
+    message = mes.split("|")  #création d'une liste [type],[nombre de car],[message]
+    sleep(50)
+    return message
 
 def afficher_etat_eveil():
     while True:
-        x = accelerometer.get_x()
-        y = accelerometer.get_y()
-        z = accelerometer.get_z()
+        # calcul de l'intesité de mouvement avec la norme euclidenne
+        mes = capter_radio() #get message radio
+        if mes[0] == "1":   #check si type du message = 1
+            mvt = float(mes[2])  #stockage du contenu de message (en float) dans mvt
 
-    # calcul de l'intesité de mouvement avec la norme euclidenne
-        mvt = abs((x**2 + y**2 + z**2) ** 0.5 - 1024)
+            if mvt < 200: 
+                display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
+            elif 200 <= mvt < 600:
+                display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
+            else:
+                display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité
+        if pin_logo.is_touched():
+            sleep(600)
+            break
 
-        if mvt < 200: 
-            display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
-        elif 200 <= mvt < 600:
-            display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
-        else:
-            display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité 
-        
+    return 
 def jouer_la_musique():
     musiques = [music.BA_DING, music.PRELUDE, music.NYAN, music.BIRTHDAY]
     for musique in musiques:
@@ -70,5 +81,6 @@ while True:
         display.show(Image.HEART)
 
     if pin_logo.is_touched():
+        sleep(500)
         lait()
         
