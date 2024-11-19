@@ -8,7 +8,7 @@ role = "parent"
 def lait():
     qttlait = 0
     display.show(qttlait)
-    while not pin_logo.is_touched():
+    while True:
         
         if button_a.was_pressed() and button_b.was_pressed():
             qttlait =0
@@ -25,6 +25,10 @@ def lait():
             if qttlait >0:
                 qttlait-=1
             display.show(qttlait)
+
+        if pin_logo.is_touched():
+            sleep(500)
+            break
             
     return
             
@@ -77,5 +81,6 @@ while True:
         display.show(Image.HEART)
 
     if pin_logo.is_touched():
+        sleep(500)
         lait()
         
