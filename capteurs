@@ -19,16 +19,6 @@ def lumiere():
                                '79900:'
                                '07886'))
 
-def mouvement():
-    if accelerometer.was_gesture('shake'):
-        display.show(Image.CONFUSED)
-    else:
-        display.show(Image.SAD)
-        
-def chute():
-        if accelerometer.was_gesture('freefall'):
-            display.show(Image.SURPRISED)
-
 def son():
     # Fonction pour mapper les plages de nombres
     def nombre(value, fromMin, fromMax, toMin, toMax):
