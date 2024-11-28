@@ -89,3 +89,33 @@ while True:
         sleep(500)
         lait()
         
+def interface():
+        if button_a.was_pressed():
+            display.scroll('musique')
+            if pin_logo.is_touched():
+                jouer_la_musique()#fait fonction 1 (joue de la musique)
+            
+        if button_b.was_pressed():
+            display.scroll('lait')
+            if pin_logo.is_touched():
+                conso_lait()#fait fonction 2 (consommation de lait)
+            
+        if button_a.was_pressed() and button_b.was_pressed():
+            display.show(Image.ASLEEP)
+            sleep(400)
+            #display.scroll('historique')
+            if pin_logo.is_touched():
+                histo_som #fait fonction 3 (historique de sommeil)
+            
+        press_count = 0
+#tjr pr interface mais pas fini
+while True:
+    if button_a.was_pressed():
+        press_count += 1
+         
+        
+        if press_count == 2:
+            display.show(Image.HAPPY)
+            sleep(1000)  
+            display.clear()
+            press_count = 0  
