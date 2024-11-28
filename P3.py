@@ -115,7 +115,7 @@ while True:
          
         
         if press_count == 2:
-            display.show(Image.HAPPY)
+            display.show(Image.HAPPY)  #en attendant fct correspondante
             sleep(1000)  
             display.clear()
             press_count = 0  
