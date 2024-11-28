@@ -107,23 +107,32 @@ while True:
         sleep(500)
         lait()
         
-def interface():
-        if button_a.was_pressed():
-            display.scroll('musique')
-            if pin_logo.is_touched():
-                jouer_la_musique()#fait fonction 1 (joue de la musique)
-            
-        if button_b.was_pressed():
-            display.scroll('lait')
-            if pin_logo.is_touched():
-                lait()#fait fonction 2 (consommation de lait)
-            
-        if button_a.was_pressed() and button_b.was_pressed():
-            display.show(Image.ASLEEP)
-            sleep(400)
-            #display.scroll('historique')
-            if pin_logo.is_touched():
-                histo_som #fait fonction 3 (historique de sommeil)
+def confirmation():
+    display.scroll("Confirmer ?")
+    while not pin_logo.is_touched():  # Attendre que le logo soit touché
+        sleep(100)
+    display.show(Image.HEART)
+    sleep(400)
+
+# Boucle principale
+while True:
+    if button_a.is_pressed():  # Option 1 : Musique
+        display.scroll("Music")
+        confirmation()  # Confirmation avec le logo
+        jouer_la_musique()
+
+    elif button_b.is_pressed():  # Option 2 : Lait
+        display.scroll("Lait")
+        confirmation()  # Confirmation avec le logo
+        lait()
+
+    elif button_a.is_pressed() and button_b.is_pressed():  # Option 3 : Histo sommeil
+        display.show(Image.ASLEEP)
+        sleep(400)
+        confirmation()  # Confirmation avec le logo
+        calculer_temps_de_sommeil()
+    
+   
             
         press_count = 0
 #tjr pr interface mais pas fini
