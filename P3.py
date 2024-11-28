@@ -93,12 +93,12 @@ def interface():
         if button_a.was_pressed():
             display.scroll('musique')
             if pin_logo.is_touched():
-                jouer_la_musique()#fait fonction 1 (joue de la musique)
+                musique()#fait fonction 1 (joue de la musique)
             
         if button_b.was_pressed():
             display.scroll('lait')
             if pin_logo.is_touched():
-                conso_lait()#fait fonction 2 (consommation de lait)
+                lait()#fait fonction 2 (consommation de lait)
             
         if button_a.was_pressed() and button_b.was_pressed():
             display.show(Image.ASLEEP)
