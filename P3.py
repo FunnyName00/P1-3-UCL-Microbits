@@ -43,9 +43,17 @@ def lait():
 
 def afficher_role():
     if role == "parent":
-        display.show(Image.HOUSE)
+        display.show(Image("09999:"
+                           "09009:"
+                           "09999:"
+                           "09000:"
+                           "09000")) #Image pour le parent = P
     else:
-        display.show(Image.COW) #Image pour l'enfant (j'ai pas trouvé une image d'un bébé xD)
+        display.show(Image.("09999:"
+                           "09000:"
+                           "09990:"
+                           "09000:"
+                           "09999")) #Image pour l'enfant = E
 
 def capter_radio():
     mes = str(radio.receive())  #message radio stocké dans un string
