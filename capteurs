@@ -82,4 +82,46 @@ def son():
         
         # Afficher le graphique correspondant
         display.show(allGraphs[soundLevel])
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+press_count = 0
+
+while True:
+    if pin_logo.is_touched():
+        press_count += 1
+        sleep(1000)
+        if press_count == 1:
+            #capteur1
+            climat()
+            sleep(1000)  
+            display.clear()
+            press_count = 1 
+            
+        if press_count == 2:
+            lumiere()
+            
+            #capteur2
+            sleep(1000)  
+            display.clear()
+            press_count = 2
+            
+        if press_count == 3:
+            son()
+            
+            #capteur3
+            sleep(1000)  
+            display.clear()
+            press_count = 0
