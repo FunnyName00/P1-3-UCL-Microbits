@@ -93,7 +93,7 @@ def interface():
         if button_a.was_pressed():
             display.scroll('musique')
             if pin_logo.is_touched():
-                musique()#fait fonction 1 (joue de la musique)
+                jouer_la_musique()#fait fonction 1 (joue de la musique)
             
         if button_b.was_pressed():
             display.scroll('lait')
