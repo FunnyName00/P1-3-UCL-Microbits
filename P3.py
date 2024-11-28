@@ -3,11 +3,15 @@ from microbit import *
 import music
 import math
 import radio
+import utime 
+
 
 radio.on()
 radio.config(channel=67, address=0x472171164, group=17)
 # var pour identifier le rôle 
 role = "parent"
+heurs_debut = None
+heurs_fin = None
 
 def lait():
     qttlait = 0
@@ -72,6 +76,20 @@ def jouer_la_musique():
     for musique in musiques:
         music.play(musique)
         sleep(500)
+
+def calculer_temps_de_sommeil(etat):
+    global heurs_debut, heurs_fin
+    if etat == 'endormi' and heurs_debut is None:
+        heurs_debut = utime.ticks_ms()
+        display.scroll("Start")
+    elif etat != 'endormi' and heurs_debut is not None:
+        heurs_fin = utime.ticks_ms()
+        temps_passe = utime.ticks_diff(heurs_fin, heurs_debut) // 1000
+        hours = temps_passe // 3600
+        min = (temps_passe % 3600) // 60
+        sec = temps_passe % 60
+        heurs_debut = None
+        display.scroll("Duree: {:02}:{:02}:{:02}".format(hours, min, sec))
 
         
 
