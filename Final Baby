@@ -9,6 +9,7 @@ radio.config(group= 17, channel=67, address=0x472171164)
 
 radio.on()
 connexion_established = False
+nonce_list = []
 key = "gbtfv"
 connexion_key = None
 
@@ -75,6 +76,23 @@ def vigenere(message, key, decryption=False):
             text += char
     return text
     
+def binary_search(list, search):
+    start = 0
+    end = len(list) - 1
+
+    while start <= end:
+        mid = (start + end) // 2
+        valeur_mid = list[mid]
+
+        if valeur_mid == search:
+            return True  
+        elif valeur_mid < search:
+            start = mid + 1  
+        else:
+            end = mid - 1  
+
+    return False 
+    
 def send_packet(key, type, content):
     """
     Envoie de données fournie en paramètres
@@ -85,8 +103,13 @@ def send_packet(key, type, content):
            (str) content:   Données à envoyer
 	:return none
     """
-    
-    #radio.send(f'{type}|{len(content)}|{content}')
+    nonce = random.randint(1,1000)
+    message = str(nonce) + str(":") + str(content)
+    print("message non crypté :",message)
+    crypted_message = str(vigenere(message, key))
+    send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
+    print(send)
+    radio.send(send)
     
 
 #Decrypt and unpack the packet received and return the fields value
@@ -101,10 +124,15 @@ def unpack_data(encrypted_packet, key):
             (int)lenght:           Longueur de la donnée en caractères
             (str) message:         Données reçues
     """
-
+    encrypted_packet = encrypted_packet.split("|")
+    type = encrypted_packet[0]
+    length = int(encrypted_packet[1])
+    message = vigenere(encrypted_packet[2],key, True)
+    
+    return type, length, message
 
 #Unpack the packet, check the validity and return the type, length and content
-def receive_packet(packet_received, key):
+def receive_packet(key):
     """
     Traite les paquets reçue via l'interface radio du micro:bit
     Cette fonction permet de construire, de chiffrer puis d'envoyer un paquet via l'interface radio du micro:bit
@@ -116,7 +144,30 @@ def receive_packet(packet_received, key):
             (int)lenght:           Longueur de la donnée en caractère
             (str) message:         Données reçue
     """
+    while True:
+        whole_crypted_message = radio.receive()
+        
+        if whole_crypted_message:
+            break
+    print("message reçu :",whole_crypted_message)
     
+    message = unpack_data(whole_crypted_message, key)
+    type = message[0]
+    length = message[1]
+    content_and_nonce = message[2].split(":")
+    nonce = content_and_nonce[0]
+    content = content_and_nonce[1]
+    if binary_search(nonce_list, nonce) == True:
+        print("attaque de hacker")
+        type = ""
+        length = ""
+        content = ""
+        
+    else :
+        nonce_list.append(nonce)
+        length = len(content)
+        
+    return [type, length, content] 
 #Calculate the challenge response
 def calculate_challenge_response(challenge):
     """
@@ -125,7 +176,11 @@ def calculate_challenge_response(challenge):
     :param (str) challenge:            Challenge reçu
 	:return (srt)challenge_response:   Réponse au challenge
     """
-    
+    global challenge_answer
+    random.seed(challenge)
+    challenge_answer = random.random()
+    print("réponse au challenge :",challenge_answer)
+    return challenge_answer
 #Ask for a new connection with a micro:bit of the same group
 def establish_connexion(key):
     """
@@ -135,21 +190,29 @@ def establish_connexion(key):
     :param (str) key:                  Clé de chiffrement
 	:return (srt)challenge_response:   Réponse au challenge
     """
-    nonce = random.randint(1,1000)
+
+    
     challenge = random.randint(1,1000)
-    message = str(nonce) + str(".") + str(challenge)
-    crypted_message = str(vigenere(message, key))
-    whole = whole = '0x01|'+str(len(crypted_message))+"|"+ str(crypted_message)
-    print(whole)
-    radio.send(str(whole))
-
-    random.seed(challenge)
-    challenge_answer = random.random()
-    print(challenge_answer)
-
+    send_packet(key, '0x01', challenge)
+    challenge_answer = calculate_challenge_response(challenge)
+    
     return challenge_answer
     
 def main():
+    global connexion_established
+    
     establish_connexion(key)
-    return True
+    print("-----------------")
+    message1 = receive_packet(key)
+    print("message reçu :",message1)
+    type = message1[0]
+    length = message1[1]
+    content = float(message1[2])
+    print("Réponse challenge reçue :", content)
+    print("Réponse challenge vraie :",challenge_answer)
+    if type == "0x01" :
+        if content == challenge_answer:
+            connexion_established = True
+            
+    print("Connexion établie :",connexion_established)
 main()
