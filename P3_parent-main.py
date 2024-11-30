@@ -4,15 +4,16 @@ import random
 import music
 
 #Can be used to filter the communication, only the ones with the same parameters will receive messages
-#radio.config(group=23, channel=2, address=0x11111111)
+radio.config(group=17, channel=67, address=0x472171164)
 #default : channel=7 (0-83), address = 0x75626974, group = 0 (0-255)
 
 #Initialisation des variables du micro:bit
 radio.on()
 connexion_established = False
 key = "gbtfv"
+session_key = ""
 connexion_key = None
-nonce_list = set()
+nonce_list = []
 baby_state = 0
 set_volume(100)
 
@@ -79,7 +80,25 @@ def vigenere(message, key, decryption=False):
         else:
             text += char
     return text
-    
+
+
+def binary_search(list, search):
+    start = 0
+    end = len(list) - 1
+
+    while start <= end:
+        mid = (start + end) // 2
+        valeur_mid = list[mid]
+
+        if valeur_mid == search:
+            return True  
+        elif valeur_mid < search:
+            start = mid + 1  
+        else:
+            end = mid - 1  
+
+    return False  
+
 def send_packet(key, type, content):
     """
     Envoi de données fournies en paramètres
@@ -90,8 +109,20 @@ def send_packet(key, type, content):
            (str) content:   Données à envoyer
 	:return none
     """
+    nonce = random.randint(1,1000)
     
-
+    while binary_search(nonce_list, nonce) == True:
+        nonce = random.randint(1,1000)
+    
+    
+    message = str(nonce) + str(":") + str(content)
+    
+    print("message non crypté :",message)
+    crypted_message = str(vigenere(message, key))
+    send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
+    print("message envoyé :",send)
+    radio.send(send)    
+    
 #Unpack the packet, check the validity and return the type, length and content
 def unpack_data(encrypted_packet, key):
     """
@@ -104,9 +135,14 @@ def unpack_data(encrypted_packet, key):
             (int)length:           Longueur de la donnée en caractères
             (str) message:         Données reçue
     """
+    encrypted_packet = encrypted_packet.split("|")
+    type = encrypted_packet[0]
+    length = int(encrypted_packet[1])
+    message = vigenere(encrypted_packet[2],key, True)
     
-
-def receive_packet(packet_received, key):
+    return type, length, message
+    
+def receive_packet(key):
     """
     Traite les paquets reçus via l'interface radio du micro:bit
     Cette fonction utilise la fonction unpack_data pour renvoyer les différents champs du message passé en paramètre
@@ -118,8 +154,32 @@ def receive_packet(packet_received, key):
             (int)lenght:           Longueur de la donnée en caractère
             (str) message:         Données reçue
     """
+    while True:
+        whole_crypted_message = radio.receive()
+        
+        if whole_crypted_message:
+            break
+    print("message reçu :",whole_crypted_message)
     
+    message = unpack_data(whole_crypted_message, key)
+    type = message[0]
+    content_and_nonce = message[2].split(":")
+    nonce = content_and_nonce[0]
+    content = content_and_nonce[1]
+    if binary_search(nonce_list, nonce) == True:
+        print("attaque de hacker")
+        type = ""
+        length = ""
+        content = ""
+        
+    else :
+        nonce_list.append(nonce)
+        length = len(content)
+        
+    return [type, length, content]
 
+
+        
 #Calculate the challenge response
 def calculate_challenge_response(challenge):
     """
@@ -128,9 +188,14 @@ def calculate_challenge_response(challenge):
     :param (str) challenge:            Challenge reçu
 	:return (srt)challenge_response:   Réponse au challenge
     """
+    random.seed(challenge)
+    challenge_answer = hashing(str(random.random()))
+    print("réponse au challenge :",challenge_answer)
+    return challenge_answer
+
 
 #Respond to a connexion request by sending the hash value of the number received
-def respond_to_connexion_request(key):
+def respond_to_connexion_request(challenge, key):
     """
     Réponse au challenge initial de connection avec l'autre micro:bit
     Si il y a une erreur, la valeur de retour est vide
@@ -138,9 +203,24 @@ def respond_to_connexion_request(key):
     :param (str) key:                   Clé de chiffrement
 	:return (srt) challenge_response:   Réponse au challenge
     """
-    while True:
-        whole_crypted_message = radio.receive()
-        if whole_crypted_message:
-            break
-    if 
+    global session_key
+    send_packet(key, "0x01", calculate_challenge_response(challenge))     #message de connexion établie
+    session_key = str(calculate_challenge_response(challenge)) + key
+    
+    
+    
+        
+
 def main():
+    message1 = receive_packet(key)
+    print("message reçu :",message1)
+    type = message1[0]
+    length = message1[1]
+    content = int(message1[2])
+    
+    if type == "0x01" :
+        respond_to_connexion_request(content, key)
+        
+        
+    
+main()
