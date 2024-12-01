@@ -5,7 +5,7 @@ import music
 import utime 
 
 #Can be used to filter the communication, only the ones with the same parameters will receive messages
-radio.config(group=17, channel=67, address=0x472171164)
+radio.config(group=17, channel=67, address=0x472171164, power= 7)
 #default : channel=7 (0-83), address = 0x75626974, group = 0 (0-255)
 
 #Initialisation des variables du micro:bit
@@ -20,6 +20,7 @@ set_volume(100)
 heurs_debut = None
 heurs_fin = None
 message_number = 0
+history_use = 0
 """ 
            *** Fonctions de bases ***
     --------------------------------------------
@@ -129,16 +130,16 @@ def send_packet(key, type, content):
     nonce_list.append(str(nonce))
 
     
-    print("nonce",nonce)
+    #print("nonce",nonce)
     
     message = str(nonce) + str(":") + str(content)
     
-    print("message non crypté :",message)
+    #print("message non crypté :",message)
     crypted_message = str(vigenere(message, key))
     send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
     
     
-    print("nonce liste ", nonce_list)
+    #print("nonce liste ", nonce_list)
     
     radio.send(send)  
     message_number +=1
@@ -180,16 +181,19 @@ def receive_packet(key):
             break
 
     message = unpack_data(whole_crypted_message, key)
-    type, length, content_and_nonce = message[0], message[1], message[2].split(":")
-    nonce, content = content_and_nonce[0], content_and_nonce[1]
+    type= message[0]
+    content_and_nonce = message[2].split(":")
+    nonce = content_and_nonce[0]
+    content = content_and_nonce[1]
 
-    print("message reçu :", message)
+    #print("message reçu :", message)
     if nonce in nonce_list:
-        print("Nonce déjà utilisé, paquet rejeté.")
+        #print("Nonce déjà utilisé, paquet rejeté.")
         return ["", "", ""]
 
     nonce_list.append(nonce)
-    print("nonce liste ", nonce_list)
+    length = len(content)
+    #print("nonce liste ", nonce_list)
     return [type, length, content]
 
          
@@ -220,7 +224,7 @@ def respond_to_connexion_request(challenge, key):
     session_key = str(calculate_challenge_response(challenge)) + key
     
     connexion_established = True
-    print("connexion établie :",connexion_established)
+    #print("connexion établie :",connexion_established)
     display.show(Image.HAPPY)
     return True
     #print("Session key :", session_key)      
@@ -248,9 +252,11 @@ def securise_connexion():
 
 
 def lait():
+    send_packet(session_key, "lait", 'start')
     
     qttlait = 0
     display.show(qttlait)
+    
     while True:
         
         if button_a.was_pressed() and button_b.was_pressed():
@@ -259,8 +265,8 @@ def lait():
             send_packet(session_key, "lait", str(qttlait))
 
         if button_b.was_pressed():
-            if qttlait <10:
-                qttlait+=1
+            
+            qttlait+=1
             
             display.show(qttlait)
             send_packet(session_key, "lait", str(qttlait))
@@ -272,6 +278,7 @@ def lait():
             send_packet(session_key, "lait", str(qttlait))
             
         if pin_logo.is_touched():
+            send_packet(session_key, "lait", 'quit')
             sleep(500)
             break
             
@@ -279,24 +286,30 @@ def lait():
 
 
 def afficher_etat_eveil():
+    send_packet(session_key, 'dodo', 'demande')
     while True:
-        # calcul de l'intesité de mouvement avec la norme euclidenne
-        mes = receive_packet(session_key)#get message radio
-        if mes[0] == "1":   #check si type du message = 1
-            mvt = float(mes[2])  #stockage du contenu de message (en float) dans mvt
-
-            if mvt < 200: 
-                display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
-            elif 200 <= mvt < 600:
-                display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
-            else:
-                display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité
         if pin_logo.is_touched():
+            send_packet(session_key, 'dodo', 'quit')
             sleep(600)
             break
 
+        if button_a.was_pressed():
+            play_music()
+        # calcul de l'intesité de mouvement avec la norme euclidenne
+        send_packet(session_key, 'dodo', 'continue') 
+        mes = receive_packet(session_key)#get message radio   
+          
+        mvt = float(mes[2])  #stockage du contenu de message (en float) dans mvt
+
+        if mvt < 200: 
+            display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
+        elif 200 <= mvt < 600:
+            display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
+        else:
+            display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité
     return 
-    
+
+
 def calculer_temps_de_sommeil(etat):
     global heurs_debut, heurs_fin
     if etat == 'endormi' and heurs_debut is None:
@@ -312,8 +325,9 @@ def calculer_temps_de_sommeil(etat):
         display.scroll("Duree: {:02}:{:02}:{:02}".format(hours, min, sec))
 
 
+    
 def confirmation():
-    display.scroll("Confirmer ?")
+    display.show("?")
     while not pin_logo.is_touched():  # Attendre que le logo soit touché
         sleep(100)
     display.show(Image.HEART)
@@ -321,30 +335,44 @@ def confirmation():
 
 
 def play_music():
-    print("musique envoyée")
+    #print("musique envoyée")
     send_packet(session_key, "music", "music")
+
+def historique():
+    global history_use
+    history_use += 1
+    if history_use == 1:
+        calculer_temps_de_sommeil('endormi')
+    if history_use == 2:
+        calculer_temps_de_sommeil('reveil')
+        history_use = 0
     
+
+
 
 # Boucle principale
 if securise_connexion() == True:
-    
+    sleep(1000)    
     while True:
-        display.show(Image.COW)
+        display.show("P")
         
-        if button_a.was_pressed():  # Option 1 : Musique
-            display.scroll("Music")
+        if button_a.was_pressed():  # Option 1 : Dodo
+            display.scroll("Dodo")
             confirmation()  # Confirmation avec le logo
-            play_music()
+            afficher_etat_eveil()
+            
     
         elif button_b.is_pressed():  # Option 2 : Lait
-            #display.scroll("Lait")
-            #confirmation()  # Confirmation avec le logo
+            display.scroll("Lait")
+            confirmation()  # Confirmation avec le logo
             lait()
     
         elif pin_logo.is_touched():  # Option 3 : Histo sommeil
-            display.show(Image.ASLEEP)
-            sleep(400)
+            display.scroll("Duree")
             confirmation()  # Confirmation avec le logo
+            historique()
+
+        
             
 
 
