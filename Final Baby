@@ -4,7 +4,7 @@ import random
 import music
 
 #Can be used to filter the communication, only the ones with the same parameters will receive messages
-radio.config(group= 17, channel=67, address=0x472171164)
+radio.config(group= 17, channel=67, address=0x472171164, power = 7)
 #default : channel=7 (0-83), address = 0x75626974, group = 0 (0-255)
 
 radio.on()
@@ -112,10 +112,10 @@ def send_packet(key, type, content):
         nonce = random.randint(1, 10000)
 
     nonce_list.append(str(nonce))
-    print("nonce liste ", nonce_list)
+    #print("nonce liste ", nonce_list)
     
     message = str(nonce) + str(":") + str(content)
-    print("message non crypté :",message)
+    #print("message non crypté :",message)
     crypted_message = str(vigenere(message, key))
     send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
     
@@ -160,17 +160,19 @@ def receive_packet(key):
             break
 
     message = unpack_data(whole_crypted_message, key)
-    type, length, content_and_nonce = message[0], message[1], message[2].split(":")
-    nonce, content = content_and_nonce[0], content_and_nonce[1]
+    type= message[0]
+    content_and_nonce = message[2].split(":")
+    nonce = content_and_nonce[0]
+    content = content_and_nonce[1]
 
-    print("message reçu :", message)
+    #print("message reçu :", message)
     if nonce in nonce_list:
-        print("Nonce déjà utilisé, paquet rejeté.")
+        #print("Nonce déjà utilisé, paquet rejeté.")
         return ["", "", ""]
 
     nonce_list.append(nonce)
-    
-    print("nonce_list",nonce_list)
+    length = len(content)
+    #print("nonce_list",nonce_list)
     return [type, length, content]
     
     
@@ -223,33 +225,72 @@ def securise_connexion():
         if content == challenge_answer:
             connexion_established = True
             session_key = str(challenge_answer) + key
-            print("Connexion établie :",connexion_established)
+            #print("Connexion établie :",connexion_established)
             display.show(Image.HAPPY)
             return True
         else: return False
     
     #print("Session key :", session_key)
 
+
+"""
+        *** Fonctions Spécifiques ***
+    -------------------------------------
+
+"""
+
 def jouer_la_musique():
     musiques = [music.BA_DING, music.PRELUDE, music.NYAN, music.BIRTHDAY]
-    print("jouer musique")
+    #print("jouer musique")
     for musique in musiques:
         music.play(musique)
         sleep(500)
+
+def lait():
+    while True:
+        
+        message = receive_packet(session_key)
+        if message[2] == 'quit':
+            break
+        if message[0] == 'lait':
+            quantity = message[2]
+            display.show(quantity)
+    return
+
+def capteurs():
+    #print("capteurs")
+    display.show("B")
+    while True:
+        message = receive_packet(session_key)
+        if message[2] == 'quit':
+            break
+        if message[0] == 'music':
+            jouer_la_musique()
+        if message[2] == 'continue':
+            x = accelerometer.get_x()
+            y = accelerometer.get_y()
+            z = accelerometer.get_z()
+            mvt = str(abs((x**2 + y**2 + z**2) ** 0.5 - 1024))
+            send_packet(session_key, 'dodo', mvt)
+            
+            sleep(800)
 
 
 
 if securise_connexion() == True:
     sleep(1000)
     while True:
-        display.show(Image.DUCK)
-        
-        if receive_packet(session_key)[0] == 'music':
-            jouer_la_musique()
+        display.show("E")
+        message = receive_packet(session_key)
+        #print(message)
 
-        if receive_packet(session_key)[0] == 'lait':
-            display.show(receive_packet(session_key)[2])
-            sleep(2000)
+        if message == ['lait', 5, 'start']:
+            lait()
+
+        if message == ['dodo', 7, 'demande']:
+            capteurs()
+
+            
             
         
         
