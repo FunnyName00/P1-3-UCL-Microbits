@@ -11,6 +11,7 @@ radio.on()
 connexion_established = False
 nonce_list = []
 key = "gbtfv"
+session_key = ""
 connexion_key = None
 
 def hashing(string):
@@ -75,7 +76,8 @@ def vigenere(message, key, decryption=False):
         else:
             text += char
     return text
-    
+
+
 def binary_search(list, search):
     start = 0
     end = len(list) - 1
@@ -92,7 +94,7 @@ def binary_search(list, search):
             end = mid - 1  
 
     return False 
-    
+
 def send_packet(key, type, content):
     """
     Envoie de données fournie en paramètres
@@ -105,10 +107,10 @@ def send_packet(key, type, content):
     """
     nonce = random.randint(1,1000)
     message = str(nonce) + str(":") + str(content)
-    print("message non crypté :",message)
+    #print("message non crypté :",message)
     crypted_message = str(vigenere(message, key))
     send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
-    print(send)
+    #print(send)
     radio.send(send)
     
 
@@ -149,7 +151,7 @@ def receive_packet(key):
         
         if whole_crypted_message:
             break
-    print("message reçu :",whole_crypted_message)
+    #print("message reçu :",whole_crypted_message)
     
     message = unpack_data(whole_crypted_message, key)
     type = message[0]
@@ -178,9 +180,11 @@ def calculate_challenge_response(challenge):
     """
     global challenge_answer
     random.seed(challenge)
-    challenge_answer = random.random()
-    print("réponse au challenge :",challenge_answer)
+    challenge_answer = hashing(str(random.random()))
+    #print("réponse au challenge :",challenge_answer)
     return challenge_answer
+
+
 #Ask for a new connection with a micro:bit of the same group
 def establish_connexion(key):
     """
@@ -197,22 +201,34 @@ def establish_connexion(key):
     challenge_answer = calculate_challenge_response(challenge)
     
     return challenge_answer
-    
-def main():
-    global connexion_established
+
+
+def securise_connexion():
+    global connexion_established, session_key
     
     establish_connexion(key)
-    print("-----------------")
+    #print("-----------------")
     message1 = receive_packet(key)
-    print("message reçu :",message1)
+    #print("message reçu :",message1)
     type = message1[0]
     length = message1[1]
-    content = float(message1[2])
-    print("Réponse challenge reçue :", content)
-    print("Réponse challenge vraie :",challenge_answer)
+    content = message1[2]
+    #print("Réponse challenge reçue :", content)
+    #print("Réponse challenge vraie :",challenge_answer)
     if type == "0x01" :
         if content == challenge_answer:
             connexion_established = True
-            
-    print("Connexion établie :",connexion_established)
-main()
+            session_key = str(challenge_answer) + key
+            print("Connexion établie :",connexion_established)
+            display.show(Image.HAPPY)
+    
+    #print("Session key :", session_key)
+
+
+
+
+
+
+
+
+securise_connexion()
