@@ -79,6 +79,7 @@ def vigenere(message, key, decryption=False):
 
 
 def binary_search(list, search):
+    list.sort()
     start = 0
     end = len(list) - 1
 
@@ -105,12 +106,19 @@ def send_packet(key, type, content):
            (str) content:   Données à envoyer
 	:return none
     """
-    nonce = random.randint(1,1000)
+    # Génération unique du nonce
+    nonce = random.randint(1, 10000)
+    while nonce in nonce_list:
+        nonce = random.randint(1, 10000)
+
+    nonce_list.append(str(nonce))
+    print("nonce liste ", nonce_list)
+    
     message = str(nonce) + str(":") + str(content)
-    #print("message non crypté :",message)
+    print("message non crypté :",message)
     crypted_message = str(vigenere(message, key))
     send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
-    #print(send)
+    
     radio.send(send)
     
 
@@ -148,28 +156,24 @@ def receive_packet(key):
     """
     while True:
         whole_crypted_message = radio.receive()
-        
         if whole_crypted_message:
             break
-    #print("message reçu :",whole_crypted_message)
-    
+
     message = unpack_data(whole_crypted_message, key)
-    type = message[0]
-    length = message[1]
-    content_and_nonce = message[2].split(":")
-    nonce = content_and_nonce[0]
-    content = content_and_nonce[1]
-    if binary_search(nonce_list, nonce) == True:
-        print("attaque de hacker")
-        type = ""
-        length = ""
-        content = ""
-        
-    else :
-        nonce_list.append(nonce)
-        length = len(content)
-        
-    return [type, length, content] 
+    type, length, content_and_nonce = message[0], message[1], message[2].split(":")
+    nonce, content = content_and_nonce[0], content_and_nonce[1]
+
+    print("message reçu :", message)
+    if nonce in nonce_list:
+        print("Nonce déjà utilisé, paquet rejeté.")
+        return ["", "", ""]
+
+    nonce_list.append(nonce)
+    
+    print("nonce_list",nonce_list)
+    return [type, length, content]
+    
+    
 #Calculate the challenge response
 def calculate_challenge_response(challenge):
     """
@@ -221,14 +225,33 @@ def securise_connexion():
             session_key = str(challenge_answer) + key
             print("Connexion établie :",connexion_established)
             display.show(Image.HAPPY)
+            return True
+        else: return False
     
     #print("Session key :", session_key)
 
+def jouer_la_musique():
+    musiques = [music.BA_DING, music.PRELUDE, music.NYAN, music.BIRTHDAY]
+    print("jouer musique")
+    for musique in musiques:
+        music.play(musique)
+        sleep(500)
 
 
 
+if securise_connexion() == True:
+    sleep(1000)
+    while True:
+        display.show(Image.DUCK)
+        
+        if receive_packet(session_key)[0] == 'music':
+            jouer_la_musique()
 
-
-
-
-securise_connexion()
+        if receive_packet(session_key)[0] == 'lait':
+            display.show(receive_packet(session_key)[2])
+            sleep(2000)
+            
+        
+        
+            
+            
