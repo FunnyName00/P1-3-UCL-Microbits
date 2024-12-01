@@ -109,18 +109,18 @@ def send_packet(key, type, content):
            (str) content:   Données à envoyer
 	:return none
     """
-    nonce = random.randint(1,1000)
+    nonce = int(random.randint(1,1000))
     
-    while binary_search(nonce_list, nonce) == True:
-        nonce = random.randint(1,1000)
+    #while binary_search(nonce_list, nonce) != False:
+    #    nonce = int(random.randint(1,1000))
     
     
     message = str(nonce) + str(":") + str(content)
     
-    print("message non crypté :",message)
+    #print("message non crypté :",message)
     crypted_message = str(vigenere(message, key))
     send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
-    print("message envoyé :",send)
+    #print("message envoyé :",send)
     radio.send(send)    
     
 #Unpack the packet, check the validity and return the type, length and content
@@ -159,7 +159,7 @@ def receive_packet(key):
         
         if whole_crypted_message:
             break
-    print("message reçu :",whole_crypted_message)
+    #print("message reçu :",whole_crypted_message)
     
     message = unpack_data(whole_crypted_message, key)
     type = message[0]
@@ -177,9 +177,7 @@ def receive_packet(key):
         length = len(content)
         
     return [type, length, content]
-
-
-        
+         
 #Calculate the challenge response
 def calculate_challenge_response(challenge):
     """
@@ -190,7 +188,7 @@ def calculate_challenge_response(challenge):
     """
     random.seed(challenge)
     challenge_answer = hashing(str(random.random()))
-    print("réponse au challenge :",challenge_answer)
+    #print("réponse au challenge :",challenge_answer)
     return challenge_answer
 
 
@@ -203,17 +201,17 @@ def respond_to_connexion_request(challenge, key):
     :param (str) key:                   Clé de chiffrement
 	:return (srt) challenge_response:   Réponse au challenge
     """
-    global session_key
+    global session_key, connexion_established
     send_packet(key, "0x01", calculate_challenge_response(challenge))     #message de connexion établie
     session_key = str(calculate_challenge_response(challenge)) + key
-    
-    
-    
-        
+    connexion_established = True
+    print("connexion établie :",connexion_established)
+    display.show(Image.HAPPY)
+    #print("Session key :", session_key)      
 
-def main():
+def securise_connexion():
     message1 = receive_packet(key)
-    print("message reçu :",message1)
+    #print("message reçu :",message1)
     type = message1[0]
     length = message1[1]
     content = int(message1[2])
@@ -222,5 +220,9 @@ def main():
         respond_to_connexion_request(content, key)
         
         
-    
-main()
+        
+
+
+
+
+securise_connexion()
