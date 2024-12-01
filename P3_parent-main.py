@@ -2,6 +2,7 @@ from microbit import *
 import radio
 import random
 import music
+import utime 
 
 #Can be used to filter the communication, only the ones with the same parameters will receive messages
 radio.config(group=17, channel=67, address=0x472171164)
@@ -16,6 +17,13 @@ connexion_key = None
 nonce_list = []
 baby_state = 0
 set_volume(100)
+heurs_debut = None
+heurs_fin = None
+message_number = 0
+""" 
+           *** Fonctions de bases ***
+    --------------------------------------------
+"""
 
 def hashing(string):
 	"""
@@ -51,7 +59,7 @@ def hashing(string):
 			x = -2
 		return str(x)
 	return ""
-    
+
 def vigenere(message, key, decryption=False):
     text = ""
     key_length = len(key)
@@ -83,6 +91,7 @@ def vigenere(message, key, decryption=False):
 
 
 def binary_search(list, search):
+    list.sort()
     start = 0
     end = len(list) - 1
 
@@ -98,7 +107,7 @@ def binary_search(list, search):
             end = mid - 1  
 
     return False  
-
+    
 def send_packet(key, type, content):
     """
     Envoi de données fournies en paramètres
@@ -109,19 +118,30 @@ def send_packet(key, type, content):
            (str) content:   Données à envoyer
 	:return none
     """
-    nonce = int(random.randint(1,1000))
+    global message_number
+    random.seed(message_number)
     
-    #while binary_search(nonce_list, nonce) != False:
-    #    nonce = int(random.randint(1,1000))
+    # Génération unique du nonce
+    nonce = random.randint(1, 10000)
+    while nonce in nonce_list:
+        nonce = random.randint(1, 10000)
+
+    nonce_list.append(str(nonce))
+
     
+    print("nonce",nonce)
     
     message = str(nonce) + str(":") + str(content)
     
-    #print("message non crypté :",message)
+    print("message non crypté :",message)
     crypted_message = str(vigenere(message, key))
     send = str(type)+ "|" +str(len(crypted_message))+ "|"+ str(crypted_message)
-    #print("message envoyé :",send)
-    radio.send(send)    
+    
+    
+    print("nonce liste ", nonce_list)
+    
+    radio.send(send)  
+    message_number +=1
     
 #Unpack the packet, check the validity and return the type, length and content
 def unpack_data(encrypted_packet, key):
@@ -156,27 +176,22 @@ def receive_packet(key):
     """
     while True:
         whole_crypted_message = radio.receive()
-        
         if whole_crypted_message:
             break
-    #print("message reçu :",whole_crypted_message)
-    
+
     message = unpack_data(whole_crypted_message, key)
-    type = message[0]
-    content_and_nonce = message[2].split(":")
-    nonce = content_and_nonce[0]
-    content = content_and_nonce[1]
-    if binary_search(nonce_list, nonce) == True:
-        print("attaque de hacker")
-        type = ""
-        length = ""
-        content = ""
-        
-    else :
-        nonce_list.append(nonce)
-        length = len(content)
-        
+    type, length, content_and_nonce = message[0], message[1], message[2].split(":")
+    nonce, content = content_and_nonce[0], content_and_nonce[1]
+
+    print("message reçu :", message)
+    if nonce in nonce_list:
+        print("Nonce déjà utilisé, paquet rejeté.")
+        return ["", "", ""]
+
+    nonce_list.append(nonce)
+    print("nonce liste ", nonce_list)
     return [type, length, content]
+
          
 #Calculate the challenge response
 def calculate_challenge_response(challenge):
@@ -191,7 +206,6 @@ def calculate_challenge_response(challenge):
     #print("réponse au challenge :",challenge_answer)
     return challenge_answer
 
-
 #Respond to a connexion request by sending the hash value of the number received
 def respond_to_connexion_request(challenge, key):
     """
@@ -204,10 +218,13 @@ def respond_to_connexion_request(challenge, key):
     global session_key, connexion_established
     send_packet(key, "0x01", calculate_challenge_response(challenge))     #message de connexion établie
     session_key = str(calculate_challenge_response(challenge)) + key
+    
     connexion_established = True
     print("connexion établie :",connexion_established)
     display.show(Image.HAPPY)
+    return True
     #print("Session key :", session_key)      
+
 
 def securise_connexion():
     message1 = receive_packet(key)
@@ -217,12 +234,117 @@ def securise_connexion():
     content = int(message1[2])
     
     if type == "0x01" :
-        respond_to_connexion_request(content, key)
+        if respond_to_connexion_request(content, key) == True:
+            return True
+        else: return False
         
+    
         
+
+""" 
+           *** Fonctions spécifiques ***
+    --------------------------------------------
+"""
+
+
+def lait():
+    
+    qttlait = 0
+    display.show(qttlait)
+    while True:
         
+        if button_a.was_pressed() and button_b.was_pressed():
+            qttlait =0
+            display.show(qttlait)
+            send_packet(session_key, "lait", str(qttlait))
+
+        if button_b.was_pressed():
+            if qttlait <10:
+                qttlait+=1
+            
+            display.show(qttlait)
+            send_packet(session_key, "lait", str(qttlait))
+            
+        if button_a.was_pressed():
+            if qttlait >0:
+                qttlait-=1
+            display.show(qttlait)
+            send_packet(session_key, "lait", str(qttlait))
+            
+        if pin_logo.is_touched():
+            sleep(500)
+            break
+            
+    return
 
 
+def afficher_etat_eveil():
+    while True:
+        # calcul de l'intesité de mouvement avec la norme euclidenne
+        mes = receive_packet(session_key)#get message radio
+        if mes[0] == "1":   #check si type du message = 1
+            mvt = float(mes[2])  #stockage du contenu de message (en float) dans mvt
+
+            if mvt < 200: 
+                display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
+            elif 200 <= mvt < 600:
+                display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
+            else:
+                display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité
+        if pin_logo.is_touched():
+            sleep(600)
+            break
+
+    return 
+    
+def calculer_temps_de_sommeil(etat):
+    global heurs_debut, heurs_fin
+    if etat == 'endormi' and heurs_debut is None:
+        heurs_debut = utime.ticks_ms()
+        display.scroll("Start")
+    elif etat != 'endormi' and heurs_debut is not None:
+        heurs_fin = utime.ticks_ms()
+        temps_passe = utime.ticks_diff(heurs_fin, heurs_debut) // 1000
+        hours = temps_passe // 3600
+        min = (temps_passe % 3600) // 60
+        sec = temps_passe % 60
+        heurs_debut = None
+        display.scroll("Duree: {:02}:{:02}:{:02}".format(hours, min, sec))
 
 
-securise_connexion()
+def confirmation():
+    display.scroll("Confirmer ?")
+    while not pin_logo.is_touched():  # Attendre que le logo soit touché
+        sleep(100)
+    display.show(Image.HEART)
+    sleep(400)
+
+
+def play_music():
+    print("musique envoyée")
+    send_packet(session_key, "music", "music")
+    
+
+# Boucle principale
+if securise_connexion() == True:
+    
+    while True:
+        display.show(Image.COW)
+        
+        if button_a.was_pressed():  # Option 1 : Musique
+            display.scroll("Music")
+            confirmation()  # Confirmation avec le logo
+            play_music()
+    
+        elif button_b.is_pressed():  # Option 2 : Lait
+            #display.scroll("Lait")
+            #confirmation()  # Confirmation avec le logo
+            lait()
+    
+        elif pin_logo.is_touched():  # Option 3 : Histo sommeil
+            display.show(Image.ASLEEP)
+            sleep(400)
+            confirmation()  # Confirmation avec le logo
+            
+
+
