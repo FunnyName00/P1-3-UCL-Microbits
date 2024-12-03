@@ -326,7 +326,11 @@ def afficher_etat_eveil():
             send_packet(session_key, 'info', 'temp')
             mes = receive_packet(session_key)
             if int(mes[2]) <= 35:
-                display.show(Image.SKULL)
+                display.show(Image('09990:'
+		                   '90909:'
+		                   '99999:'
+		                   '09990:'
+		                   '09990')) #crane
             else :
                 display.scroll(mes[2])
             
