@@ -19,6 +19,8 @@ baby_state = 0
 set_volume(100)
 heurs_debut = None
 heurs_fin = None
+temps_total_sommeil = 0
+suivi_en_cours = False
 message_number = 0
 history_use = 0
 """ 
@@ -310,21 +312,39 @@ def afficher_etat_eveil():
     return 
 
 def calculer_temps_de_sommeil(etat):
-    global heurs_debut, heurs_fin
-    if etat == 'endormi' and heurs_debut is None:
-        heurs_debut = utime.ticks_ms()
-        display.scroll("Start")
-    elif etat != 'endormi' and heurs_debut is not None:
-        heurs_fin = utime.ticks_ms()
-        temps_passe = utime.ticks_diff(heurs_fin, heurs_debut) // 1000
-        hours = temps_passe // 3600
-        min = (temps_passe % 3600) // 60
-        sec = temps_passe % 60
-        heurs_debut = None
-        display.scroll("Duree: {:02}:{:02}:{:02}".format(hours, min, sec))
-
-
+    global heurs_debut, temps_total_sommeil, suivi_en_cours
     
+    if etat == 'endormi' and not suivi_en_cours:
+        heurs_debut = utime.ticks_ms()
+        suivi_en_cours = True
+        display.scroll("Start")
+        
+    elif etat == 'endormi' and suivi_en_cours and heurs_debut is not None:
+        
+        heures_fin = utime.ticks_ms()
+        temps_passe = utime.ticks_diff(heures_fin, heurs_debut) // 1000
+        temps_total_sommeil += temps_passe
+
+        hours = temps_total_sommeil // 3600
+        minutes = (temps_total_sommeil % 3600) // 60
+        seconds = temps_total_sommeil % 60
+        
+        display.scroll("Duree: {:02}:{:02}:{:02}".format(hours, minutes, seconds))
+        
+    elif etat != 'endormi' and suivi_en_cours and heurs_debut is not None:
+        heures_fin = utime.ticks_ms()
+        temps_passe = utime.ticks_diff(heures_fin, heurs_debut) // 1000
+        temps_total_sommeil += temps_passe
+        heurs_debut = None
+        suivi_en_cours = False
+        
+        hours = temps_total_sommeil // 3600
+        minutes = (temps_total_sommeil % 3600) // 60
+        seconds = temps_total_sommeil % 60
+        
+        display.scroll("Total: {:02}:{:02}:{:02}".format(hours, minutes, seconds))
+
+
 def confirmation():
     display.show("?")
     while not pin_logo.is_touched():  # Attendre que le logo soit touché
@@ -339,13 +359,33 @@ def play_music():
 
 def historique():
     global history_use
-    history_use += 1
-    if history_use == 1:
-        calculer_temps_de_sommeil('endormi')
-    if history_use == 2:
-        calculer_temps_de_sommeil('reveil')
-        history_use = 0
+    history_use = 0
     
+    while True:
+        display.show(Image.TORTOISE)
+        
+        if pin_logo.is_touched():
+            sleep(600)
+            break  # Sortie de la boucle si le logo est touché
+        
+        if button_a.is_pressed():
+            if history_use == 0:
+                calculer_temps_de_sommeil('endormi')
+                history_use += 1
+                print("history use :", history_use)
+                utime.sleep_ms(300)  # Débounce pour éviter plusieurs détections rapides
+            else:
+                calculer_temps_de_sommeil('endormi')
+                history_use += 1
+                print("history use :", history_use)
+                utime.sleep_ms(300)  # Débounce pour éviter des répétitions
+
+        if button_b.is_pressed():
+            calculer_temps_de_sommeil('reveil')
+            history_use = 0
+            utime.sleep_ms(300)  # Débounce
+
+            
 def loading():
     display.show(Image.CLOCK12)
     sleep(300)
@@ -360,6 +400,7 @@ def loading():
     
 
 
+        
 # Boucle principale
 while True:
     display.show("P")
@@ -369,7 +410,7 @@ while True:
             sleep(1000)    
             while True:
                 display.show("P")
-                    
+                sleep (600)    
                 if button_a.was_pressed():  # Option 1 : Dodo
                     display.scroll("Dodo")
                     confirmation()  # Confirmation avec le logo
