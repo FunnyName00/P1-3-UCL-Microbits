@@ -325,7 +325,11 @@ def afficher_etat_eveil():
         if fonction == 1:
             send_packet(session_key, 'info', 'temp')
             mes = receive_packet(session_key)
-            display.scroll(mes[2])
+            if int(mes[2]) <= 35:
+                display.show(Image.SKULL)
+            else :
+                display.scroll(mes[2])
+            
             if pin_logo.is_touched():
                 send_packet(session_key, 'info', 'quit')
                 sleep(600)
