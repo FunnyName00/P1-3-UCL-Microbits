@@ -259,7 +259,6 @@ def lait():
 
 def capteurs():
     #print("capteurs")
-    display.show("B")
     while True:
         message = receive_packet(session_key)
         if message[2] == 'quit':
