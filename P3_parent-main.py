@@ -465,7 +465,11 @@ def historique():
     history_use = 0
     
     while True:
-        display.show(Image.TORTOISE)
+        display.show(Image('07970:'
+	                   '70907:'
+	                   '79907:'
+	                   '70007:'
+	                   '07770'))
         
         if pin_logo.is_touched():
             sleep(600)
