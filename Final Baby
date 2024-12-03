@@ -265,7 +265,7 @@ def capteurs():
             break
         if message[0] == 'music':
             jouer_la_musique()
-        if message[2] == 'continue':
+        if message[2] == 'mvt':
             x = accelerometer.get_x()
             y = accelerometer.get_y()
             z = accelerometer.get_z()
@@ -273,6 +273,41 @@ def capteurs():
             send_packet(session_key, 'dodo', mvt)
             
             sleep(800)
+            
+        if message[2] == 'temp':
+            temp = temperature()
+            send_packet(session_key, 'temp', temp)
+            sleep(800)
+
+        if message[2] == 'lum':
+            if display.read_light_level() > 1:
+                send_packet(session_key, 'lum', 'sun')
+            else:
+                send_packet(session_key, 'lum', 'moon')
+            sleep(800)
+
+        if message [2] == 'son':
+            def nombre(value, fromMin, fromMax, toMin, toMax):
+                fromRange = fromMax - fromMin
+                toRange = toMax - toMin
+                valueScaled = float(value - fromMin) / float(fromRange)
+                return toMin + (valueScaled * toRange)
+
+            # Ignorer la première lecture du niveau sonore
+            soundLevel = microphone.sound_level()
+            sleep(200)
+    
+            # Lire le niveau sonore et augmenter sa sensibilité
+            rawSoundLevel = microphone.sound_level()
+        
+            # Augmenter la sensibilité : amplifier les niveaux
+            amplifiedSoundLevel = int(nombre(rawSoundLevel, 0, 255, 0, 15))
+            
+            # Limiter le niveau à l'échelle des graphiques (0 à 5)
+            soundLevel = str(min(amplifiedSoundLevel // 3, 5))  # Diviser par 3 pour ajuster les plages
+            print(soundLevel)
+            send_packet(session_key, 'son', soundLevel )
+
 
 
 while True:
@@ -288,7 +323,7 @@ while True:
                 if message == ['lait', 5, 'start']:
                     lait()
         
-                if message == ['dodo', 7, 'demande']:
+                if message == ['info', 7, 'demande']:
                     capteurs()
 
             
