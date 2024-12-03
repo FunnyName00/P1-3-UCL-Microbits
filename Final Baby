@@ -276,19 +276,21 @@ def capteurs():
             sleep(800)
 
 
-
-if securise_connexion() == True:
-    sleep(1000)
-    while True:
-        display.show("E")
-        message = receive_packet(session_key)
-        #print(message)
-
-        if message == ['lait', 5, 'start']:
-            lait()
-
-        if message == ['dodo', 7, 'demande']:
-            capteurs()
+while True:
+    display.show("E")
+    if pin_logo.is_touched():
+        if securise_connexion() == True:
+            sleep(1000)
+            while True:
+                display.show("E")
+                message = receive_packet(session_key)
+                #print(message)
+        
+                if message == ['lait', 5, 'start']:
+                    lait()
+        
+                if message == ['dodo', 7, 'demande']:
+                    capteurs()
 
             
             
