@@ -285,31 +285,130 @@ def lait():
             break
             
     return
-
+    
 
 def afficher_etat_eveil():
-    send_packet(session_key, 'dodo', 'demande')
+    send_packet(session_key, 'info', 'demande')
+    fonction = 0
     while True:
+        
         if pin_logo.is_touched():
-            send_packet(session_key, 'dodo', 'quit')
+            send_packet(session_key, 'info', 'quit')
             sleep(600)
             break
 
         if button_a.was_pressed():
             play_music()
-        # calcul de l'intesité de mouvement avec la norme euclidenne
-        send_packet(session_key, 'dodo', 'continue') 
-        mes = receive_packet(session_key)#get message radio   
-          
-        mvt = float(mes[2])  #stockage du contenu de message (en float) dans mvt
+            
+        if button_b.was_pressed():
+            fonction += 1
+            
+        if fonction == 0:
+            send_packet(session_key, 'info', 'mvt') 
+            mes = receive_packet(session_key)#get message radio   
+              
+            mvt = float(mes[2])  #stockage du contenu de message (en float) dans mvt
+    
+            if mvt < 200: 
+                display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
+            elif 200 <= mvt < 600:
+                display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
+            else:
+                display.show(Image.ANGRY)
+                play_music()#img pour indiquer que le bébé est très agité
 
-        if mvt < 200: 
-            display.show(Image.ASLEEP) #img pour indiquer que le bébé est endormi  
-        elif 200 <= mvt < 600:
-            display.show(Image.CONFUSED) #img pour indiquer que le bébé est agité  
-        else:
-            display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité
+            if pin_logo.is_touched():
+                send_packet(session_key, 'info', 'quit')
+                sleep(600)
+                break
+
+        if fonction == 1:
+            send_packet(session_key, 'info', 'temp')
+            mes = receive_packet(session_key)
+            display.scroll(mes[2])
+            if pin_logo.is_touched():
+                send_packet(session_key, 'info', 'quit')
+                sleep(600)
+                break
+            
+        if fonction == 2:
+            send_packet(session_key, 'info', 'lum')
+            mes = receive_packet(session_key)
+            
+            if pin_logo.is_touched():
+                send_packet(session_key, 'info', 'quit')
+                sleep(600)
+                break
+                
+            if mes[2] == 'sun':
+                display.show(Image('60606:'
+                               '08980:'
+                               '69996:'
+                               '08980:'
+                               '60606'))
+                sleep(1000)
+                
+            elif mes[2] == 'moon':
+                display.show(Image('07886:'
+                               '79900:'
+                               '99000:'
+                               '79900:'
+                               '07886'))
+                sleep(1000)
+                
+        if fonction == 3:
+            
+            if pin_logo.is_touched():
+                send_packet(session_key, 'info', 'quit')
+                sleep(600)
+                break
+            send_packet(session_key, 'info', 'son')
+
+            graph5 = Image("99999:"
+                   "99999:"
+                   "99999:"
+                   "99999:"
+                   "99999")
+    
+            graph4 = Image("44444:"
+                   "99999:"
+                   "99999:"
+                   "99999:"
+                   "99999")
+    
+            graph3 = Image("00000:"
+                   "55555:"
+                   "99999:"
+                   "99999:"
+                   "99999")
+    
+            graph2 = Image("00000:"
+                   "00000:"
+                   "55555:"
+                   "99999:"
+                   "99999")
+    
+            graph1 = Image("00000:"
+                   "00000:"
+                   "00000:"
+                   "55555:"
+                   "99999")
+    
+            graph0 = Image("00000:"
+                   "00000:"
+                   "00000:"
+                   "00000:"
+                   "00000")
+    
+            allGraphs = [graph0, graph1, graph2, graph3, graph4, graph5]
+            mes = receive_packet(session_key)
+            soundLevel = int(mes[2])
+            display.show(allGraphs[soundLevel])
+
+        if fonction > 3:
+            fonction = 0
     return 
+
 
 def calculer_temps_de_sommeil(etat):
     global heurs_debut, temps_total_sommeil, suivi_en_cours
