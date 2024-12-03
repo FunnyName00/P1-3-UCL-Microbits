@@ -309,7 +309,6 @@ def afficher_etat_eveil():
             display.show(Image.ANGRY) #img pour indiquer que le bébé est très agité
     return 
 
-
 def calculer_temps_de_sommeil(etat):
     global heurs_debut, heurs_fin
     if etat == 'endormi' and heurs_debut is None:
@@ -347,32 +346,45 @@ def historique():
         calculer_temps_de_sommeil('reveil')
         history_use = 0
     
-
+def loading():
+    display.show(Image.CLOCK12)
+    sleep(300)
+    display.show(Image.CLOCK3)
+    sleep(300)
+    display.show(Image.CLOCK6)
+    sleep(300)
+    display.show(Image.CLOCK9)
+    sleep(300)
+    display.show(Image.CLOCK12)
+    sleep(300)
+    
 
 
 # Boucle principale
-if securise_connexion() == True:
-    sleep(1000)    
-    while True:
-        display.show("P")
-        
-        if button_a.was_pressed():  # Option 1 : Dodo
-            display.scroll("Dodo")
-            confirmation()  # Confirmation avec le logo
-            afficher_etat_eveil()
-            
-    
-        elif button_b.is_pressed():  # Option 2 : Lait
-            display.scroll("Lait")
-            confirmation()  # Confirmation avec le logo
-            lait()
-    
-        elif pin_logo.is_touched():  # Option 3 : Histo sommeil
-            display.scroll("Duree")
-            confirmation()  # Confirmation avec le logo
-            historique()
+while True:
+    display.show("P")
+    if pin_logo.is_touched():
+        loading()
+        if securise_connexion() == True:
+            sleep(1000)    
+            while True:
+                display.show("P")
+                    
+                if button_a.was_pressed():  # Option 1 : Dodo
+                    display.scroll("Dodo")
+                    confirmation()  # Confirmation avec le logo
+                    afficher_etat_eveil()
+                        
+                
+                elif button_b.is_pressed():  # Option 2 : Lait
+                    display.scroll("Lait")
+                    confirmation()  # Confirmation avec le logo
+                    lait()
+                
+                elif pin_logo.is_touched():  # Option 3 : Histo sommeil
+                    display.scroll("Duree")
+                    confirmation()  # Confirmation avec le logo
+                    historique()
 
         
             
-
-
