@@ -286,6 +286,30 @@ def lait():
             
     return
     
+def climat(temperature):
+    if temperature < 35 :
+        for i in [0, 1, 2]:
+            display.show(temperature)
+            sleep(600)
+        display.clear()
+        display.show(Image('09990:'
+                           '90909:'
+                           '99999:'
+                           '09990:'
+                           '09990'))
+           
+    elif temperature > 42:
+        for i in [0, 1, 2]:
+            display.show(temperature)
+        display.clear()
+        display.show(Image('09990:'
+                           '90909:'
+                           '99999:'
+                           '09990:'
+                           '09990'))
+    else:
+        display.show(temperature)
+
 
 def afficher_etat_eveil():
     send_packet(session_key, 'info', 'demande')
@@ -325,14 +349,7 @@ def afficher_etat_eveil():
         if fonction == 1:
             send_packet(session_key, 'info', 'temp')
             mes = receive_packet(session_key)
-            if int(mes[2]) <= 35:
-                display.show(Image('09990:'
-		                   '90909:'
-		                   '99999:'
-		                   '09990:'
-		                   '09990')) #crane
-            else :
-                display.scroll(mes[2])
+            climat(mes[2])
             
             if pin_logo.is_touched():
                 send_packet(session_key, 'info', 'quit')
