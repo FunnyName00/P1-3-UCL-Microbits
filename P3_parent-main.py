@@ -423,7 +423,7 @@ def afficher_etat_eveil():
                    "00000:"
                    "00000:"
                    "00000:"
-                   "00000")
+                   "66666")
     
             allGraphs = [graph0, graph1, graph2, graph3, graph4, graph5]
             mes = receive_packet(session_key)
