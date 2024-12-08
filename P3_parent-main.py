@@ -130,7 +130,8 @@ def send_packet(key, type, content):
         nonce = random.randint(1, 10000)
 
     nonce_list.append(str(nonce))
-
+    if len(nonce_list) > 125:
+           nonce_list.clear()
     
     #print("nonce",nonce)
     
