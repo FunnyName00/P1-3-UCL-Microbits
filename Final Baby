@@ -110,9 +110,15 @@ def send_packet(key, type, content):
     nonce = random.randint(1, 10000)
     while nonce in nonce_list:
         nonce = random.randint(1, 10000)
-
+        
+        
     nonce_list.append(str(nonce))
+    
+    if len(nonce_list) > 125:
+           nonce_list.clear()
+        
     #print("nonce liste ", nonce_list)
+    #print("len nonce", len(nonce_list))
     
     message = str(nonce) + str(":") + str(content)
     #print("message non crypté :",message)
@@ -240,7 +246,7 @@ def securise_connexion():
 """
 
 def jouer_la_musique():
-    musiques = [music.BA_DING, music.PRELUDE, music.NYAN, music.BIRTHDAY]
+    musiques = [music.ODE]
     #print("jouer musique")
     for musique in musiques:
         music.play(musique)
@@ -257,6 +263,7 @@ def lait():
             display.show(quantity)
     return
 
+    
 def capteurs():
     #print("capteurs")
     while True:
@@ -293,7 +300,6 @@ def capteurs():
                 valueScaled = float(value - fromMin) / float(fromRange)
                 return toMin + (valueScaled * toRange)
 
-            # Ignorer la première lecture du niveau sonore
             soundLevel = microphone.sound_level()
             sleep(200)
     
@@ -302,11 +308,12 @@ def capteurs():
         
             # Augmenter la sensibilité : amplifier les niveaux
             amplifiedSoundLevel = int(nombre(rawSoundLevel, 0, 255, 0, 15))
-            
+            print(amplifiedSoundLevel)
             # Limiter le niveau à l'échelle des graphiques (0 à 5)
-            soundLevel = str(min(amplifiedSoundLevel // 3, 5))  # Diviser par 3 pour ajuster les plages
+            soundLevel = str(min(amplifiedSoundLevel // 3, 5)*2)  # Diviser par 3 pour ajuster les plages
             print(soundLevel)
             send_packet(session_key, 'son', soundLevel )
+            sleep(500)
 
 
 
