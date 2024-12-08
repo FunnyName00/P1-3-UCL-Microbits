@@ -288,30 +288,33 @@ def lait():
     return
     
 def climat(temperature):
-    if temperature < 35 :
-        for i in [0, 1, 2]:
-            display.show(temperature)
-            sleep(600)
+    if int(temperature) < 35 :
+       
+        display.show(str(temperature))
+        sleep(600)
         display.clear()
         display.show(Image('09990:'
                            '90909:'
                            '99999:'
                            '09990:'
                            '09990'))
+        sleep(1000)
            
-    elif temperature > 42:
-        for i in [0, 1, 2]:
-            display.show(temperature)
+    elif int(temperature) > 42:
+        
+        display.show(str(temperature))
         display.clear()
         display.show(Image('09990:'
                            '90909:'
                            '99999:'
                            '09990:'
                            '09990'))
+        sleep(1000)
     else:
-        display.show(temperature)
+        display.show(str(temperature))
 
 
+        
 def afficher_etat_eveil():
     send_packet(session_key, 'info', 'demande')
     fonction = 0
@@ -428,7 +431,12 @@ def afficher_etat_eveil():
     
             allGraphs = [graph0, graph1, graph2, graph3, graph4, graph5]
             mes = receive_packet(session_key)
+            print("mess :", mes[2])
             soundLevel = int(mes[2])
+            if soundLevel > 5:
+                soundLevel = 5
+            
+            print(allGraphs[soundLevel])
             display.show(allGraphs[soundLevel])
 
         if fonction > 3:
@@ -482,6 +490,7 @@ def play_music():
     #print("musique envoyée")
     send_packet(session_key, "music", "music")
 
+    
 def historique():
     global history_use
     history_use = 0
@@ -541,7 +550,7 @@ while True:
                 display.show("P")
                 sleep (600)    
                 if button_a.was_pressed():  # Option 1 : Dodo
-                    display.scroll("Dodo")
+                    display.scroll("Infos")
                     confirmation()  # Confirmation avec le logo
                     afficher_etat_eveil()
                         
