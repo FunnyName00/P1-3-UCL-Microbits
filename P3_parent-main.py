@@ -430,14 +430,18 @@ def afficher_etat_eveil():
                    "66666")
     
             allGraphs = [graph0, graph1, graph2, graph3, graph4, graph5]
+            sleep(600)
             mes = receive_packet(session_key)
             print("mess :", mes[2])
-            soundLevel = int(mes[2])
-            if soundLevel > 5:
-                soundLevel = 5
-            
-            print(allGraphs[soundLevel])
-            display.show(allGraphs[soundLevel])
+            try:
+                soundLevel = int(mes[2])  # Tenter la conversion en entier
+                if soundLevel > 5:
+                    soundLevel = 5
+    
+                print(allGraphs[soundLevel])
+                display.show(allGraphs[soundLevel])
+            except ValueError:
+                pass
 
         if fonction > 3:
             fonction = 0
